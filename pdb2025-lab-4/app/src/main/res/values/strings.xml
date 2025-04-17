@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">ProfileApp</string>
+
+    <string name="reg_title_text">Registration Screen</string>
+    <string name="reg_consent_text">"Copyright © 2020 copyright holder.\n\nAll rights reserved.\n\nRedistribution and use in source and binary forms are permitted provided that the above copyright notice and this paragraph are duplicated in all such forms and that any documentation, advertising materials, and other materials related to such distribution and use acknowledge that the software was developed by the University of Ljubljana, Slovenia. The name of the University of Ljubljana, Slovenia may not be used to endorse or promote products derived from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.\n\nBy clicking "Register" below, you agree to the above licensing terms."</string>
+    <string name="reg_full_name_text">Full Name</string>
+    <string name="reg_button_text">Register</string>
+    <string name="reg_full_name_error">Full name is required</string>
+    <string name="prof_msg_text">Enter your message of the day</string>
+    <string name="prof_button_camera_text">Take a photo</string>
+    <string name="prof_button_msg_text">Show message</string>
+    <string name="title_registration_activity">Please register</string>
+    <string name="title_profile_activity">User profile</string>
+    <string name="title_display_message_activity">Your message</string>
+    <string name="prof_name_placeholder">Name should go here</string>
+
+</resources>
