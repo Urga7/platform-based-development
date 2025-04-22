@@ -9,7 +9,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 
 import android.app.PendingIntent
-import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
@@ -24,7 +23,6 @@ class SensingService : Service() {
         private const val CHANNEL_ID = "sensing_service_channel"
         private const val NOTIFICATION_ID = 1
     }
-
 
     @RequiresPermission(Manifest.permission.ACTIVITY_RECOGNITION)
     override fun onCreate() {
