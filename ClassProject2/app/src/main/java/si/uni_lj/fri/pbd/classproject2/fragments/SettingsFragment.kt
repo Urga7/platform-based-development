@@ -2,6 +2,7 @@ package si.uni_lj.fri.pbd.classproject2.fragments
 
 import android.Manifest
 import android.app.TimePickerDialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -15,6 +16,7 @@ import java.time.LocalTime
 import java.util.Locale
 import androidx.core.content.edit
 import si.uni_lj.fri.pbd.classproject2.R
+import si.uni_lj.fri.pbd.classproject2.services.SensingService
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -76,19 +78,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun startSensingService() {
         Log.d("SettingsFragment", "Starting sensing service.")
-        //  Start your service here.  You'll need the Intent and Context.
-        //  Example (replace with your actual service and intent creation):
-        //  val serviceIntent = Intent(requireContext(), YourSensingService::class.java)
-        //  requireContext().startService(serviceIntent)
+        val serviceIntent = Intent(requireContext(), SensingService::class.java)
+        // serviceIntent.action = SensingService.ACTION_START_TRACKING
+        requireContext().startForegroundService(serviceIntent)
     }
 
     private fun stopSensingService() {
-        //  Stop your service here.
         Log.d("SettingsFragment", "Stopping sensing service.")
-        // Example (replace with your actual service and intent stopping):
-        // val serviceIntent = Intent(requireContext(), YourSensingService::class.java)
-        // requireContext().stopService(serviceIntent)
-
+        val serviceIntent = Intent(requireContext(), SensingService::class.java)
+        // serviceIntent.action = SensingService.ACTION_STOP_TRACKING
+        requireContext().stopService(serviceIntent)
     }
 
     private fun showTimePicker() {
