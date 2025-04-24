@@ -7,16 +7,16 @@
 
     <fragment
         android:id="@+id/dashboardFragment"
-        android:name="si.uni_lj.fri.pbd.classproject2.DashboardFragment"
+        android:name="si.uni_lj.fri.pbd.classproject2.fragments.DashboardFragment"
         android:label="Dashboard"
         tools:layout="@layout/fragment_dashboard" />
     <fragment
         android:id="@+id/historyFragment"
-        android:name="si.uni_lj.fri.pbd.classproject2.HistoryFragment"
+        android:name="si.uni_lj.fri.pbd.classproject2.fragments.HistoryFragment"
         android:label="History"
         tools:layout="@layout/fragment_history" />
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="si.uni_lj.fri.pbd.classproject2.SettingsFragment"
+        android:name="si.uni_lj.fri.pbd.classproject2.fragments.SettingsFragment"
         android:label="Settings" />
 </navigation>
