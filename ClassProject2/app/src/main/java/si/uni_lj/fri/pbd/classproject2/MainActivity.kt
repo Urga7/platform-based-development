@@ -33,13 +33,15 @@ class MainActivity : AppCompatActivity() {
         navController = navHostFragment.navController
 
         appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.dashboardFragment, R.id.historyFragment, R.id.settingsFragment
-            ), drawerLayout
+            setOf( R.id.dashboardFragment, R.id.historyFragment, R.id.settingsFragment ), drawerLayout
         )
         
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
+        if (intent.getBooleanExtra("openDashboard", false)) {
+            navController.navigate(R.id.dashboardFragment)
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

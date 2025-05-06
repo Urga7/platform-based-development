@@ -1,6 +1,5 @@
 package si.uni_lj.fri.pbd.classproject2.fragments
 
-import android.Manifest
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -17,27 +16,31 @@ import java.util.Locale
 import androidx.core.content.edit
 import si.uni_lj.fri.pbd.classproject2.R
 import si.uni_lj.fri.pbd.classproject2.services.SensingService
+import si.uni_lj.fri.pbd.classproject2.utils.Helpers.requiredPermissions
+import com.google.android.material.snackbar.Snackbar
+import si.uni_lj.fri.pbd.classproject2.utils.Helpers.getStepGoal
+import si.uni_lj.fri.pbd.classproject2.utils.Helpers.scheduleAlarm
 
 class SettingsFragment : PreferenceFragmentCompat() {
+
+    companion object {
+        const val TRACKING_SWITCH = "tracking_enabled"
+        const val NOTIFICATION_TIME = "notification_time"
+        const val RESET_APP = "reset_app"
+    }
 
     private val pref by lazy {
         preferenceManager.sharedPreferences
     }
 
-    private val requiredPermissions = arrayOf(
-        Manifest.permission.ACTIVITY_RECOGNITION,
-        Manifest.permission.BODY_SENSORS,
-        Manifest.permission.POST_NOTIFICATIONS
-    )
-
     private val requestPermissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            val allGranted = permissions.all { it.value } // Check if all permissions are granted
+            val allGranted = permissions.all { it.value }
             if (allGranted) {
                 startSensingService()
             } else {
                 Toast.makeText(requireContext(), "Permissions denied", Toast.LENGTH_SHORT).show()
-                val trackingSwitch = findPreference<SwitchPreferenceCompat>("tracking_enabled")
+                val trackingSwitch = findPreference<SwitchPreferenceCompat>(TRACKING_SWITCH)
                 trackingSwitch?.isChecked = false
             }
         }
@@ -45,24 +48,41 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
-        val trackingSwitch = findPreference<SwitchPreferenceCompat>("tracking_enabled")
+        val trackingSwitch = findPreference<SwitchPreferenceCompat>(TRACKING_SWITCH)
         trackingSwitch?.setOnPreferenceChangeListener { _, newValue ->
             if (newValue == true) requestPermissions()
             else stopSensingService()
             true
         }
 
-        val notificationTimePref = findPreference<Preference>("notification_time")
-        notificationTimePref?.setOnPreferenceClickListener {
-            showTimePicker()
-            true
+        val notificationTimePref = findPreference<Preference>(NOTIFICATION_TIME)
+        notificationTimePref?.apply {
+            val savedTime = pref?.getString(NOTIFICATION_TIME, null)
+            summary = savedTime ?: "Select a time for daily notification"
+
+            setOnPreferenceClickListener {
+                showTimePicker()
+                true
+            }
         }
 
-        val resetPref = findPreference<Preference>("reset_app")
+        val resetPref = findPreference<Preference>(RESET_APP)
         resetPref?.setOnPreferenceClickListener {
             resetApp()
             true
         }
+    }
+
+    private fun startSensingService() {
+        Log.d("SettingsFragment", "Starting sensing service.")
+        val serviceIntent = Intent(requireContext(), SensingService::class.java)
+        requireContext().startForegroundService(serviceIntent)
+    }
+
+    private fun stopSensingService() {
+        Log.d("SettingsFragment", "Stopping sensing service.")
+        val serviceIntent = Intent(requireContext(), SensingService::class.java)
+        requireContext().stopService(serviceIntent)
     }
 
     private fun requestPermissions() {
@@ -75,33 +95,34 @@ class SettingsFragment : PreferenceFragmentCompat() {
         } else startSensingService()
     }
 
-
-    private fun startSensingService() {
-        Log.d("SettingsFragment", "Starting sensing service.")
-        val serviceIntent = Intent(requireContext(), SensingService::class.java)
-        // serviceIntent.action = SensingService.ACTION_START_TRACKING
-        requireContext().startForegroundService(serviceIntent)
-    }
-
-    private fun stopSensingService() {
-        Log.d("SettingsFragment", "Stopping sensing service.")
-        val serviceIntent = Intent(requireContext(), SensingService::class.java)
-        // serviceIntent.action = SensingService.ACTION_STOP_TRACKING
-        requireContext().stopService(serviceIntent)
-    }
-
     private fun showTimePicker() {
         val now = LocalTime.now()
         val picker = TimePickerDialog(requireContext(), { _, hourOfDay, minute ->
-            val time = String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute)
-            pref?.edit { putString("notification_time", time) }
-            findPreference<Preference>("notification_time")?.summary = time
+            if (getStepGoal(requireContext()) == -1) {
+                Snackbar.make(
+                    requireView(),
+                    "You must set your step goal before setting the notification time",
+                    Snackbar.LENGTH_LONG
+                ).show()
+                return@TimePickerDialog
+            }
+
+            val selectedTime = LocalTime.of(hourOfDay, minute)
+            val timeString = String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute)
+            pref?.edit { putString(NOTIFICATION_TIME, timeString) }
+            findPreference<Preference>(NOTIFICATION_TIME)?.summary = timeString
+            scheduleAlarm(requireContext(), selectedTime)
         }, now.hour, now.minute, true)
         picker.show()
     }
 
     private fun resetApp() {
         pref?.edit { clear() }
+
+        // Update the summary for the Notification Time preference
+        val notificationTimePref = findPreference<Preference>(NOTIFICATION_TIME)
+        notificationTimePref?.summary = "Select a time for daily notification"
+
         Toast.makeText(requireContext(), "App reset", Toast.LENGTH_SHORT).show()
     }
 }

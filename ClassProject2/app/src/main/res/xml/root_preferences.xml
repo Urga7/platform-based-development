@@ -1,24 +1,27 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="Tracking">
+    <PreferenceCategory app:title="General">
 
         <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:icon="@drawable/ic_menu_mylocation"
             app:key="tracking_enabled"
-            app:title="Enable Tracking"
-            app:defaultValue="false" />
+            app:title="Enable Tracking" />
 
         <EditTextPreference
+            android:inputType="number"
+            app:dialogTitle="Enter your daily step goal"
+            app:icon="@drawable/ic_baseline_directions_walk_24"
             app:key="step_goal"
             app:title="Step Goal"
-            app:dialogTitle="Enter your daily step goal"
-            app:useSimpleSummaryProvider="true"
-            android:inputType="number" />
+            app:useSimpleSummaryProvider="true" />
 
         <Preference
+            app:icon="@drawable/ic_notification"
             app:key="notification_time"
-            app:title="Notification Time"
-            app:summary="Select a time for daily notification" />
+            app:summary="Select a time for daily notification"
+            app:title="Notification Time" />
 
         <Preference
             app:key="reset_app"
