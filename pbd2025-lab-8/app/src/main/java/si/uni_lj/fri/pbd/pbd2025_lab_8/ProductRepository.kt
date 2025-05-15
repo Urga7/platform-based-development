@@ -23,8 +23,10 @@ class ProductRepository(application: Application?) {
         
     }
 
-    fun findProduct(name: String): List<Product>? {
-        return productDao?.findProduct(name)
+    fun findProduct(name: String) {
+        ProductRoomDatabase.databaseWriteExecutor?.execute(Runnable {
+            searchResults.postValue(productDao?.findProduct(name))
+        })
     }
 
      init {

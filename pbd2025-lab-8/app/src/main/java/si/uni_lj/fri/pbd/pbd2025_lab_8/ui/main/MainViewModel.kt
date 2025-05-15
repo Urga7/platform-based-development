@@ -18,9 +18,9 @@ class MainViewModel(application: Application?) : AndroidViewModel(application!!)
     }
 
     fun findProduct(name: String) {
-        val results = repository.findProduct(name)
-        searchResults.postValue(results)
+        repository.findProduct(name)
     }
+
     fun deleteProduct(name: String) {
         repository.deleteProduct(name)
     }
