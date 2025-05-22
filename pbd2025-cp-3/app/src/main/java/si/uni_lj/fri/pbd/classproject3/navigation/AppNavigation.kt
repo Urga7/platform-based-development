@@ -54,7 +54,6 @@ fun AppNavigation(
         }
 
         // Recipe Details Screen
-        // Arguments: recipeId (String), fromSearch (Boolean)
         composable(
             route = "recipe_details_screen/{recipeId}/{fromSearch}",
             arguments = listOf(
@@ -66,18 +65,18 @@ fun AppNavigation(
             val fromSearch = backStackEntry.arguments?.getBoolean("fromSearch")
             val detailsViewModel: DetailsViewModel = viewModel(factory = factory)
 
-            if (recipeId != null && fromSearch != null) {
-                RecipeDetailsScreen(
-                    recipeId = recipeId,
-                    fromSearchScreen = fromSearch,
-                    detailsViewModel = detailsViewModel,
-                    onNavigateBack = { navController.popBackStack() }
-                )
-            } else {
-                // Handle error: missing arguments. Maybe navigate back or show an error.
-                // For now, just pop back.
+            if (recipeId == null || fromSearch == null) {
+                // Missing arguments
                 navController.popBackStack()
+                return@composable
             }
+
+            RecipeDetailsScreen(
+                recipeId = recipeId,
+                fromSearchScreen = fromSearch,
+                detailsViewModel = detailsViewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }

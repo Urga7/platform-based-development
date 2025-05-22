@@ -63,31 +63,31 @@ class DetailsViewModel(private val repository: RecipeRepository) : ViewModel() {
      */
     fun toggleFavorite() {
         val currentRecipe = _uiState.value.recipeDetails
-        if (currentRecipe?.idMeal != null) {
-            viewModelScope.launch {
-                // Optimistically update UI, then call repository
-                val newFavoriteState = !_uiState.value.isFavorite
-                _uiState.value = _uiState.value.copy(isFavorite = newFavoriteState)
+        if (currentRecipe?.idMeal == null) return
 
-                // Create a new RecipeDetailsIM with the updated favorite status for the repository
-                val updatedRecipeForRepo = currentRecipe.copy(isFavorite = newFavoriteState)
+        viewModelScope.launch {
+            // Optimistically update UI, then call repository
+            val newFavoriteState = !_uiState.value.isFavorite
+            _uiState.value = _uiState.value.copy(isFavorite = newFavoriteState)
 
-                try {
-                    repository.toggleFavoriteStatus(updatedRecipeForRepo)
-                    // Re-fetch to ensure consistency, or trust the optimistic update if toggleFavoriteStatus handles DB correctly.
-                    // For simplicity, we rely on the repository to update the DB correctly.
-                    // The favorite status in RecipeDetailsIM from API/DB should be the source of truth.
-                    // Let's re-check from repository to be absolutely sure after toggle.
-                    val freshFavoriteStatus = repository.isFavorite(currentRecipe.idMeal)
-                    _uiState.value = _uiState.value.copy(isFavorite = freshFavoriteStatus, recipeDetails = currentRecipe.copy(isFavorite = freshFavoriteStatus))
+            // Create a new RecipeDetailsIM with the updated favorite status for the repository
+            val updatedRecipeForRepo = currentRecipe.copy(isFavorite = newFavoriteState)
 
-                } catch (e: Exception) {
-                    // Revert optimistic update on error
-                    _uiState.value = _uiState.value.copy(
-                        isFavorite = !newFavoriteState, // Revert
-                        errorMessage = "Could not update favorite status: ${e.message}"
-                    )
-                }
+            try {
+                repository.toggleFavoriteStatus(updatedRecipeForRepo)
+                // Re-fetch to ensure consistency, or trust the optimistic update if toggleFavoriteStatus handles DB correctly.
+                // For simplicity, we rely on the repository to update the DB correctly.
+                // The favorite status in RecipeDetailsIM from API/DB should be the source of truth.
+                // Let's re-check from repository to be absolutely sure after toggle.
+                val freshFavoriteStatus = repository.isFavorite(currentRecipe.idMeal)
+                _uiState.value = _uiState.value.copy(isFavorite = freshFavoriteStatus, recipeDetails = currentRecipe.copy(isFavorite = freshFavoriteStatus))
+
+            } catch (e: Exception) {
+                // Revert optimistic update on error
+                _uiState.value = _uiState.value.copy(
+                    isFavorite = !newFavoriteState, // Revert
+                    errorMessage = "Could not update favorite status: ${e.message}"
+                )
             }
         }
     }

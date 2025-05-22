@@ -25,8 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import si.uni_lj.fri.pbd.classproject3.screens.common.RecipeGridItem
 import si.uni_lj.fri.pbd.classproject3.viewmodels.FavoritesViewModel
-import si.uni_lj.fri.pbd.classproject3.viewmodels.FavoritesUiState
 
 @Composable
 fun FavoritesScreen(
@@ -36,20 +36,18 @@ fun FavoritesScreen(
     val uiState by favoritesViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Handle showing snackbar for errors (if any are added to FavoritesUiState)
+    // Handle showing snackbar for errors
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let {
             snackbarHostState.showSnackbar(
                 message = it,
                 duration = SnackbarDuration.Short
             )
-            // favoritesViewModel.errorMessageShown() // Add this if you implement error clearing
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues -> // Padding from Scaffold (e.g., if there was a TopAppBar)
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) {
+        paddingValues -> // Padding from Scaffold
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -85,7 +83,6 @@ fun FavoritesScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(uiState.favoriteRecipes, key = { it.idMeal }) { recipe ->
-                            // Reusing the RecipeGridItem from SearchScreen
                             RecipeGridItem(recipe = recipe, onClick = { onRecipeClick(recipe.idMeal) })
                         }
                     }

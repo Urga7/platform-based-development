@@ -1,10 +1,12 @@
 package si.uni_lj.fri.pbd.classproject3.screens
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -13,16 +15,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import si.uni_lj.fri.pbd.classproject3.R
-import si.uni_lj.fri.pbd.classproject3.models.dto.IngredientDTO
-import si.uni_lj.fri.pbd.classproject3.models.RecipeSummaryIM
-import si.uni_lj.fri.pbd.classproject3.viewmodels.SearchUiState
+import si.uni_lj.fri.pbd.classproject3.screens.common.RecipeGridItem
 import si.uni_lj.fri.pbd.classproject3.viewmodels.SearchViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
@@ -35,12 +31,18 @@ fun SearchScreen(
     var selectedIngredientName by remember { mutableStateOf<String?>(null) }
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
+    // Determine if any loading operation relevant to pull-to-refresh is active
+    val isActuallyRefreshing = uiState.isLoadingIngredients || (selectedIngredientName != null && uiState.isLoadingRecipes)
+
     // Swipe to refresh state
     val pullRefreshState = rememberPullRefreshState(
-        refreshing = uiState.isLoadingRecipes,
+        refreshing = isActuallyRefreshing,
         onRefresh = {
-            selectedIngredientName?.let {
-                searchViewModel.fetchRecipesByIngredient(it, forceRefresh = true)
+            if (selectedIngredientName != null && uiState.ingredients.isNotEmpty()) { // Ensure ingredients were loaded before trying to refresh recipes
+                searchViewModel.fetchRecipesByIngredient(selectedIngredientName!!, forceRefresh = true)
+            } else {
+                // If no ingredient selected, or if ingredients list is empty (failed initial load), refresh ingredients.
+                searchViewModel.fetchIngredients()
             }
         }
     )
@@ -49,31 +51,36 @@ fun SearchScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let {
-            snackbarHostState.showSnackbar(
-                message = it,
-                duration = SnackbarDuration.Short
-            )
+            snackbarHostState.showSnackbar(message = it, duration = SnackbarDuration.Short)
             searchViewModel.errorMessageShown() // Reset error message
         }
     }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues -> // Padding from Scaffold itself, if any top app bar was present
-        Box(
+    ) { paddingValues ->
+        Box( // This Box has the pullRefresh modifier
             modifier = Modifier
-                .padding(paddingValues) // Apply padding from Scaffold
+                .padding(paddingValues)
                 .pullRefresh(pullRefreshState)
                 .fillMaxSize()
         ) {
+            // Determine if the content will be the LazyVerticalGrid
+            val shouldShowRecipeGrid = uiState.recipes.isNotEmpty() && selectedIngredientName != null
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 8.dp) // Outer padding for the screen content
+                    .background(Color.Transparent) // For consistent touch behavior
+                    // Apply verticalScroll only if not displaying the LazyVerticalGrid.
+                    // This makes the Column scrollable for static messages/empty states.
+                    .then(if (!shouldShowRecipeGrid) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Ingredients Dropdown
-                if (uiState.isLoadingIngredients) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                // Ingredients Dropdown Area
+                if (uiState.isLoadingIngredients && selectedIngredientName == null && uiState.ingredients.isEmpty()) {
+                    CircularProgressIndicator(modifier = Modifier.padding(vertical = 24.dp))
                 } else if (uiState.ingredients.isNotEmpty()) {
                     ExposedDropdownMenuBox(
                         expanded = isDropdownExpanded,
@@ -82,15 +89,11 @@ fun SearchScreen(
                     ) {
                         OutlinedTextField(
                             value = selectedIngredientName ?: "Select an Ingredient",
-                            onValueChange = {}, // Not directly editable
+                            onValueChange = {},
                             readOnly = true,
                             label = { Text("Main Ingredient") },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded)
-                            },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth()
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
                         )
                         ExposedDropdownMenu(
                             expanded = isDropdownExpanded,
@@ -102,7 +105,7 @@ fun SearchScreen(
                                         text = { Text(name) },
                                         onClick = {
                                             selectedIngredientName = name
-                                            searchViewModel.fetchRecipesByIngredient(name)
+                                            searchViewModel.fetchRecipesByIngredient(name, forceRefresh = false)
                                             isDropdownExpanded = false
                                         }
                                     )
@@ -110,96 +113,73 @@ fun SearchScreen(
                             }
                         }
                     }
-                } else {
-                    // This case (no ingredients and not loading) might indicate an initial load error for ingredients
-                    if (uiState.errorMessage == null && !uiState.isLoadingIngredients) { // Avoid double message
-                        Text(
-                            "Could not load ingredients. Swipe down to retry or check connection.",
-                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                } else if (!uiState.isLoadingIngredients && uiState.errorMessage == null) {
+                    // This is the "Could not load ingredients" state.
+                    // The Column is scrollable here due to !shouldShowRecipeGrid.
+                    // Add a Spacer with weight to push this message down if the Column needs to fill height.
+                    Spacer(modifier = Modifier.weight(0.2f)) // Pushes content down a bit
+                    Text(
+                        "Could not load ingredients. Swipe down to retry or check connection.",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(0.8f)) // Fills remaining space to ensure scrollability
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Recipes Grid / Loading / Messages
-                when {
-                    uiState.isLoadingRecipes && uiState.recipes.isEmpty() -> { // Show central loader only if recipes list is empty
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                // Content Area: Recipes Grid or Messages
+                // This Box will fill the remaining vertical space if the Column is not scrollable (i.e., when grid is shown)
+                // or be part of the scrollable content if the Column is scrollable.
+                Box(
+                    modifier = Modifier
+                        .weight(1f) // Ensures this section tries to take available space
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when {
+                        selectedIngredientName != null && uiState.isLoadingRecipes && uiState.recipes.isEmpty() -> {
                             CircularProgressIndicator()
                         }
-                    }
-                    uiState.noRecipesMessage != null -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        uiState.noRecipesMessage != null -> {
                             Text(uiState.noRecipesMessage!!, textAlign = TextAlign.Center)
                         }
-                    }
-                    uiState.recipes.isNotEmpty() -> {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2), // Two columns
-                            contentPadding = PaddingValues(vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(uiState.recipes, key = { it.idMeal }) { recipe ->
-                                RecipeGridItem(recipe = recipe, onClick = { onRecipeClick(recipe.idMeal) })
+                        shouldShowRecipeGrid -> {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                contentPadding = PaddingValues(vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxSize() // Grid fills the space given by this Box
+                            ) {
+                                items(uiState.recipes, key = { it.idMeal }) { recipe ->
+                                    RecipeGridItem(recipe = recipe, onClick = { onRecipeClick(recipe.idMeal) })
+                                }
                             }
                         }
-                    }
-                    selectedIngredientName != null && !uiState.isLoadingRecipes && uiState.errorMessage == null && uiState.noRecipesMessage == null -> {
-                        // This state means an ingredient is selected, not loading, no specific error/no-recipe message, but recipes are empty.
-                        // This could happen if an API call for recipes by ingredient returns null/empty without triggering specific messages.
-                        // Or if an ingredient was selected but fetchRecipesByIngredient hasn't populated recipes yet.
-                        // Usually covered by isLoadingRecipes or noRecipesMessage.
-                        // For safety, can add a generic prompt or leave it to be handled by other states.
+                        selectedIngredientName != null && !uiState.isLoadingRecipes && uiState.recipes.isEmpty() && uiState.noRecipesMessage == null && uiState.errorMessage == null -> {
+                            Text(
+                                "No recipes found for '$selectedIngredientName'.\nPull down to refresh or select another ingredient.",
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                        // Default empty state for this Box if no other condition met
+                        // (e.g., no ingredient selected yet, and ingredients did load).
+                        // The parent Column's scroll + weighted spacers handle the overall scrollability.
+                        else -> {
+                            if (uiState.ingredients.isNotEmpty() && selectedIngredientName == null && !uiState.isLoadingIngredients) {
+                                Text("Select an ingredient to see recipes.", textAlign = TextAlign.Center)
+                            }
+                            // Implicitly, this Box with weight(1f) helps the scrollable Column have extent.
+                        }
                     }
                 }
             }
 
             PullRefreshIndicator(
-                refreshing = uiState.isLoadingRecipes,
+                refreshing = isActuallyRefreshing,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter)
-            )
-        }
-    }
-}
-
-@Composable
-fun RecipeGridItem(
-    recipe: RecipeSummaryIM,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(recipe.strMealThumb)
-                    .crossfade(true)
-                    // You should have placeholder and error drawables in your res/drawable
-                    .placeholder(R.drawable.ic_placeholder_image) // Create a placeholder drawable
-                    .error(R.drawable.ic_error_image) // Create an error drawable
-                    .build(),
-                contentDescription = recipe.strMeal,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f) // Square image
-            )
-            Text(
-                text = recipe.strMeal,
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                maxLines = 2
             )
         }
     }

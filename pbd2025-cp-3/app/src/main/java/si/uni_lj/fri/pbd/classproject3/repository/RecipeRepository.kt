@@ -76,21 +76,13 @@ class RecipeRepository(
                 val response = restApi.getRecipeDetailsById(recipeId)
                 val recipeDetailsDto = response?.recipes?.firstOrNull()
                 if (recipeDetailsDto != null) {
-                    // Check if this recipe is already a favorite to set the initial state
                     val localRecipe = recipeDao.getRecipeByMealId(recipeId)
-                    Mapper.mapRecipeDetailsDtoToRecipeDetailsIm(
-                        localRecipe?.isFavorite,
-                        recipeDetailsDto
-                    )
+                    Mapper.mapRecipeDetailsDtoToRecipeDetailsIm(localRecipe?.isFavorite, recipeDetailsDto)
                 } else {
                     null
                 }
             } catch (e: Exception) {
-                Log.e(
-                    TAG,
-                    "Error fetching recipe details for ID '$recipeId' from API: ${e.message}",
-                    e
-                )
+                Log.e(TAG, "Error fetching recipe details for ID '$recipeId' from API: ${e.message}", e)
                 null
             }
         }
@@ -110,11 +102,7 @@ class RecipeRepository(
                     Mapper.mapRecipeDetailsToRecipeDetailsIm(it.isFavorite, it)
                 }
             } catch (e: Exception) {
-                Log.e(
-                    TAG,
-                    "Error fetching recipe details for ID '$recipeId' from DB: ${e.message}",
-                    e
-                )
+                Log.e(TAG, "Error fetching recipe details for ID '$recipeId' from DB: ${e.message}", e)
                 null
             }
         }
@@ -127,8 +115,6 @@ class RecipeRepository(
      * @return A Flow emitting a list of [RecipeSummaryIM] objects.
      */
     fun getFavoriteRecipes(): Flow<List<RecipeSummaryIM>> {
-        // The flow from Room is already asynchronous and will run on a background thread.
-        // Mapping is done on the collector's context, typically Dispatchers.Main for UI.
         return recipeDao.getFavoriteRecipes().map { list ->
             list.map { Mapper.mapRecipeDetailsToRecipeSummaryIm(it) }
         }
@@ -138,32 +124,44 @@ class RecipeRepository(
      * Adds or updates a recipe in the local database, marking it as a favorite.
      * If the recipe details are not fully present, it tries to fetch them from the API.
      *
-     * @param recipe The [RecipeDetailsIM] object to add/update as a favorite.
+     * @param recipeIM The [RecipeDetailsIM] object to add/update as a favorite.
      */
-    suspend fun addRecipeToFavorites(recipe: RecipeDetailsIM) {
+    suspend fun addRecipeToFavorites(recipeIM: RecipeDetailsIM) {
         withContext(Dispatchers.IO) {
+            if (recipeIM.idMeal == null) {
+                Log.e(TAG, "Cannot add favorite, idMeal is null")
+                return@withContext
+            }
             try {
-                var fullRecipe = recipe
-                // If instructions are missing, it might be a summary. Fetch full details.
-                if (fullRecipe.strInstructions.isNullOrEmpty() && fullRecipe.idMeal != null) {
-                    val fetchedDetails = getRecipeDetailsFromApi(fullRecipe.idMeal!!)
+                var recipeToAdd = recipeIM
+                // If instructions are missing, it might be a summary from search. Fetch full details.
+                if (recipeToAdd.strInstructions.isNullOrEmpty()) {
+                    val fetchedDetails = getRecipeDetailsFromApi(recipeToAdd.idMeal!!)
                     if (fetchedDetails != null) {
-                        fullRecipe = fetchedDetails
+                        recipeToAdd = fetchedDetails // Use full details
                     } else {
-                        Log.w(
-                            TAG,
-                            "Could not fetch full details for recipe ${fullRecipe.idMeal} before favoriting."
-                        )
-                        // Proceed with potentially incomplete data if API fetch fails
+                        Log.w(TAG, "Could not fetch full details for recipe ${recipeToAdd.idMeal} before favoriting. Proceeding with current details.")
                     }
                 }
 
-                val recipeEntity = Mapper.mapRecipeDetailsImToRecipeDetails(true, fullRecipe)
-                recipeEntity.isFavorite = true // Ensure it's marked as favorite
-                recipeDao.insertRecipe(recipeEntity)
-                Log.d(TAG, "Recipe ${recipeEntity.idMeal} added to favorites.")
+                val existingEntity = recipeDao.getRecipeByMealId(recipeToAdd.idMeal!!)
+                if (existingEntity != null) {
+                    // Recipe exists, update its favorite status
+                    existingEntity.isFavorite = true
+                    // Update all other fields from recipeToAdd in case they were fetched fresh
+                    val updatedEntity = Mapper.mapRecipeDetailsImToRecipeDetails(true, recipeToAdd)
+                    updatedEntity.id = existingEntity.id // CRITICAL: Preserve existing database ID for update
+                    recipeDao.updateRecipe(updatedEntity)
+                    Log.d(TAG, "Recipe ${existingEntity.idMeal} updated to favorite.")
+                } else {
+                    // Recipe does not exist, insert new
+                    val newEntity = Mapper.mapRecipeDetailsImToRecipeDetails(true, recipeToAdd)
+                    newEntity.isFavorite = true // Ensure it's marked
+                    recipeDao.insertRecipe(newEntity)
+                    Log.d(TAG, "Recipe ${newEntity.idMeal} added to favorites as new entry.")
+                }
             } catch (e: Exception) {
-                Log.e(TAG, "Error adding recipe ${recipe.idMeal} to favorites: ${e.message}", e)
+                Log.e(TAG, "Error adding recipe ${recipeIM.idMeal} to favorites: ${e.message}", e)
             }
         }
     }
@@ -171,19 +169,31 @@ class RecipeRepository(
     /**
      * Updates a recipe in the local database, typically to mark it as not a favorite.
      *
-     * @param recipe The [RecipeDetailsIM] object to update (e.g., to unfavorite).
+     * @param recipeIM The [RecipeDetailsIM] object to update (e.g., to unfavorite).
      */
-    suspend fun removeRecipeFromFavorites(recipe: RecipeDetailsIM) {
+    suspend fun removeRecipeFromFavorites(recipeIM: RecipeDetailsIM) {
         withContext(Dispatchers.IO) {
+            if (recipeIM.idMeal == null) {
+                Log.e(TAG, "Cannot remove favorite, idMeal is null")
+                return@withContext
+            }
             try {
-                val recipeEntity = Mapper.mapRecipeDetailsImToRecipeDetails(false, recipe)
-                recipeEntity.isFavorite = false // Ensure it's marked as not favorite
-                // We use insert because OnConflictStrategy.REPLACE will update it.
-                // Alternatively, you could fetch by idMeal, update the entity, then call recipeDao.updateRecipe().
-                recipeDao.insertRecipe(recipeEntity)
-                Log.d(TAG, "Recipe ${recipeEntity.idMeal} removed from favorites.")
+                val existingEntity = recipeDao.getRecipeByMealId(recipeIM.idMeal!!)
+                if (existingEntity != null) {
+                    // Recipe exists, update its favorite status
+                    existingEntity.isFavorite = false
+                    // We can just update the flag on the existing entity
+                    recipeDao.updateRecipe(existingEntity)
+                    Log.d(TAG, "Recipe ${existingEntity.idMeal} removed from favorites (updated to not favorite).")
+                } else {
+                    // Should not happen if we are trying to unfavorite, implies it was never in DB
+                    Log.w(TAG, "Recipe ${recipeIM.idMeal} not found in DB to remove from favorites.")
+                    // Optionally, if you want to ensure no entry exists (e.g. if it was a DTO from API that was never saved)
+                    // you could attempt a delete by idMeal if your DAO supports it, or just log.
+                    // For now, logging is sufficient as `updateRecipe` won't do anything if no match.
+                }
             } catch (e: Exception) {
-                Log.e(TAG, "Error removing recipe ${recipe.idMeal} from favorites: ${e.message}", e)
+                Log.e(TAG, "Error removing recipe ${recipeIM.idMeal} from favorites: ${e.message}", e)
             }
         }
     }
@@ -196,7 +206,7 @@ class RecipeRepository(
     suspend fun isFavorite(recipeId: String?): Boolean {
         if (recipeId == null) return false
         return withContext(Dispatchers.IO) {
-            recipeDao.getRecipeByMealId(recipeId)?.isFavorite ?: false
+            recipeDao.getRecipeByMealId(recipeId)?.isFavorite == true
         }
     }
 
@@ -212,11 +222,11 @@ class RecipeRepository(
                 Log.e(TAG, "Cannot toggle favorite status for recipe with null idMeal.")
                 return@withContext
             }
-            val isCurrentlyFavorite = isFavorite(recipeDetailsIM.idMeal)
-            if (isCurrentlyFavorite) {
-                removeRecipeFromFavorites(recipeDetailsIM)
-            } else {
+
+            if (recipeDetailsIM.isFavorite == true) {
                 addRecipeToFavorites(recipeDetailsIM)
+            } else {
+                removeRecipeFromFavorites(recipeDetailsIM)
             }
         }
     }
@@ -232,40 +242,22 @@ class RecipeRepository(
         withContext(Dispatchers.IO) {
             try {
                 Log.d(TAG, "Starting database pre-population...")
-                // A few common ingredients to try
-                val commonIngredients = listOf(
-                    "Chicken",
-                    "Beef",
-                    "Salmon",
-                    "Eggs",
-                    "Pasta",
-                    "Potatoes",
-                    "Onion",
-                    "Garlic",
-                    "Tomatoes",
-                    "Cheese"
-                )
+                val commonIngredients = listOf("Chicken", "Beef", "Salmon", "Eggs", "Pasta", "Potatoes", "Onion", "Garlic", "Tomatoes", "Cheese")
                 var recipesAdded = 0
 
                 for (ingredientName in commonIngredients.shuffled()) {
                     if (recipesAdded >= numberOfRecipesToPrepopulate) break
-
                     val recipesByIngredient = restApi.getRecipesByIngredient(ingredientName)
                     recipesByIngredient?.recipes?.take(2)?.forEach { recipeSummaryDto ->
                         if (recipesAdded >= numberOfRecipesToPrepopulate) return@forEach
                         if (recipeSummaryDto.id == null) return@forEach
 
-                        // Check if already in DB (not necessarily as favorite)
                         val existingRecipe = recipeDao.getRecipeByMealId(recipeSummaryDto.id)
                         if (existingRecipe == null) {
-                            val recipeDetailsDto =
-                                restApi.getRecipeDetailsById(recipeSummaryDto.id)?.recipes?.firstOrNull()
+                            val recipeDetailsDto = restApi.getRecipeDetailsById(recipeSummaryDto.id)?.recipes?.firstOrNull()
                             if (recipeDetailsDto != null) {
-                                val recipeEntity = Mapper.mapRecipeDetailsDtoToRecipeDetails(
-                                    false,
-                                    recipeDetailsDto
-                                ) // Not favorite by default
-                                recipeDao.insertRecipe(recipeEntity)
+                                val recipeEntity = Mapper.mapRecipeDetailsDtoToRecipeDetails(false, recipeDetailsDto)
+                                recipeDao.insertRecipe(recipeEntity) // Insert new, not as favorite
                                 recipesAdded++
                                 Log.d(TAG, "Pre-populated with: ${recipeEntity.strMeal}")
                             }

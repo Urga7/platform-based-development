@@ -17,14 +17,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import si.uni_lj.fri.pbd.classproject3.R // Placeholder/error drawables
+import si.uni_lj.fri.pbd.classproject3.R
 import si.uni_lj.fri.pbd.classproject3.models.RecipeSummaryIM
 
 @Composable
-fun RecipeGridItem(
-    recipe: RecipeSummaryIM,
-    onClick: () -> Unit
-) {
+fun RecipeGridItem(recipe: RecipeSummaryIM, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -36,8 +33,8 @@ fun RecipeGridItem(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(recipe.strMealThumb)
                     .crossfade(true)
-                    .placeholder(R.drawable.ic_placeholder_image)
-                    .error(R.drawable.ic_error_image)
+                    .placeholder(R.drawable.ic_placeholder_image) // Create a placeholder drawable
+                    .error(R.drawable.ic_error_image) // Create an error drawable
                     .build(),
                 contentDescription = recipe.strMeal,
                 contentScale = ContentScale.Crop,

@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
@@ -18,9 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import si.uni_lj.fri.pbd.classproject3.R // For placeholder/error drawables
+import si.uni_lj.fri.pbd.classproject3.R
 import si.uni_lj.fri.pbd.classproject3.models.RecipeDetailsIM
-import si.uni_lj.fri.pbd.classproject3.viewmodels.DetailsUiState
 import si.uni_lj.fri.pbd.classproject3.viewmodels.DetailsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +59,7 @@ fun RecipeDetailsScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -170,8 +169,6 @@ fun RecipeDetailsContent(recipe: RecipeDetailsIM, modifier: Modifier = Modifier)
         // YouTube Link (Optional)
         recipe.strYoutube?.takeIf { it.isNotBlank() }?.let { youtubeUrl ->
             Spacer(modifier = Modifier.height(24.dp))
-            // You could make this a clickable link if needed, e.g., using AnnotatedString and ClickableText
-            // For simplicity, just displaying the text.
             Text("Watch on YouTube:", style = MaterialTheme.typography.titleMedium)
             Text(youtubeUrl, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
@@ -207,14 +204,9 @@ fun FormatIngredientsAndMeasures(recipe: RecipeDetailsIM): List<Pair<String, Str
         if (ingredientValue.isNotBlank()) {
             val measure = measuresMap["strIngredient$i"] ?: ""
             ingredients.add(Pair(ingredientValue, measure))
-        } else {
-            // If an ingredient is blank, stop processing further ingredients,
-            // as they are typically listed sequentially without gaps.
-            // However, some APIs might have gaps, so this could be adjusted.
-            // For themealdb, it seems sequential.
-            break
         }
     }
+
     return ingredients
 }
 

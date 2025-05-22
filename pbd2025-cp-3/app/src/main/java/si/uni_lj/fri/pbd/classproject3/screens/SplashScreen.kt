@@ -15,7 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import si.uni_lj.fri.pbd.classproject3.R // Assuming you will have a R.drawable.ic_launcher_foreground and R.string.app_name
+import si.uni_lj.fri.pbd.classproject3.R
 
 @Composable
 fun SplashScreen() {
@@ -26,17 +26,13 @@ fun SplashScreen() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // You can replace this with your app's logo or any other splash content
-        // Adding a placeholder image. Replace R.drawable.ic_launcher_foreground with your actual logo
-        // If you don't have one yet, you can comment out the Image composable
-        // or use a generic icon for now.
         Image(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground), // Replace with your app logo
-            contentDescription = stringResource(R.string.app_name), // App name as content description
+            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            contentDescription = stringResource(R.string.app_name),
             modifier = Modifier.size(128.dp)
         )
         Text(
-            text = stringResource(R.string.app_name), // App name
+            text = stringResource(R.string.app_name),
             fontSize = 24.sp,
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(top = 16.dp)

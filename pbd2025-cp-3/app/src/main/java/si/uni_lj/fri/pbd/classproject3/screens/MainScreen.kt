@@ -1,7 +1,6 @@
 package si.uni_lj.fri.pbd.classproject3.screens
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -9,7 +8,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -67,15 +65,6 @@ fun MainScreen(factory: ViewModelFactory) {
         AppNavigation(
             navController = navController,
             factory = factory,
-            // Pass the padding to NavHost, so content is not obscured by system bars or bottom nav
-            // Modifier.padding(innerPadding) should be applied to the NavHost container if necessary,
-            // or to individual screens if they need to handle padding themselves.
-            // For now, AppNavigation itself doesn't take a modifier, but its composables might.
-            // The NavHost inside AppNavigation will be placed in the content area of the Scaffold.
         )
-        // The NavHost in AppNavigation is the content of the Scaffold.
-        // It implicitly uses the space provided by the Scaffold's content lambda (it/innerPadding).
-        // If AppNavigation's NavHost needed explicit padding from the Scaffold,
-        // you would pass innerPadding to it.
     }
 }

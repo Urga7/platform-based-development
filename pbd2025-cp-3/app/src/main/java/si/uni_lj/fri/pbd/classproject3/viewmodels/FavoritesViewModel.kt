@@ -29,7 +29,6 @@ class FavoritesViewModel(private val repository: RecipeRepository) : ViewModel()
      * Called when an error message has been shown and should be cleared.
      */
     fun errorMessageShown() {
-        // Currently, error handling in FavoritesUiState is basic.
-        // This can be expanded if specific error scenarios are handled directly here.
+
     }
 }
