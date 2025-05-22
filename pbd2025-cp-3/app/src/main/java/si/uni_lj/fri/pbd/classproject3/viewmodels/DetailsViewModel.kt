@@ -75,10 +75,8 @@ class DetailsViewModel(private val repository: RecipeRepository) : ViewModel() {
 
             try {
                 repository.toggleFavoriteStatus(updatedRecipeForRepo)
-                // Re-fetch to ensure consistency, or trust the optimistic update if toggleFavoriteStatus handles DB correctly.
-                // For simplicity, we rely on the repository to update the DB correctly.
-                // The favorite status in RecipeDetailsIM from API/DB should be the source of truth.
-                // Let's re-check from repository to be absolutely sure after toggle.
+
+                // Re-check from repository to be absolutely sure after toggle.
                 val freshFavoriteStatus = repository.isFavorite(currentRecipe.idMeal)
                 _uiState.value = _uiState.value.copy(isFavorite = freshFavoriteStatus, recipeDetails = currentRecipe.copy(isFavorite = freshFavoriteStatus))
 

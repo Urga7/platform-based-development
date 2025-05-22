@@ -177,19 +177,18 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val restApi: Re
             }
             try {
                 val existingEntity = recipeDao.getRecipeByMealId(recipeIM.idMeal!!)
-                if (existingEntity != null) {
-                    // Recipe exists, update its favorite status
-                    existingEntity.isFavorite = false
-                    // We can just update the flag on the existing entity
-                    recipeDao.updateRecipe(existingEntity)
-                    Log.d(TAG, "Recipe ${existingEntity.idMeal} removed from favorites (updated to not favorite).")
-                } else {
+                if (existingEntity == null) {
                     // Should not happen if we are trying to unfavorite, implies it was never in DB
                     Log.w(TAG, "Recipe ${recipeIM.idMeal} not found in DB to remove from favorites.")
-                    // Optionally, if you want to ensure no entry exists (e.g. if it was a DTO from API that was never saved)
-                    // you could attempt a delete by idMeal if your DAO supports it, or just log.
-                    // For now, logging is sufficient as `updateRecipe` won't do anything if no match.
+                    return@withContext
                 }
+
+                // Recipe exists, update its favorite status
+                existingEntity.isFavorite = false
+
+                // We can just update the flag on the existing entity
+                recipeDao.updateRecipe(existingEntity)
+                Log.d(TAG, "Recipe ${existingEntity.idMeal} removed from favorites (updated to not favorite).")
             } catch (e: Exception) {
                 Log.e(TAG, "Error removing recipe ${recipeIM.idMeal} from favorites: ${e.message}", e)
             }

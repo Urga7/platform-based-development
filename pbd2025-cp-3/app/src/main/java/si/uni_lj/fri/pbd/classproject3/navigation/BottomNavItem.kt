@@ -21,5 +21,6 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val title: 
         icon = Icons.Filled.Favorite,
         title = "Favorites"
     )
+
     // RecipeDetailsScreen is not a bottom nav item, it's navigated to from Search/Favorites
 }

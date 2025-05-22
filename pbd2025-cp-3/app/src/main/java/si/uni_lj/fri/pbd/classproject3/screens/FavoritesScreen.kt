@@ -47,11 +47,11 @@ fun FavoritesScreen(
     }
 
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) {
-        paddingValues -> // Padding from Scaffold
+        paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // Apply padding from Scaffold
+                .padding(paddingValues)
                 .padding(horizontal = 16.dp, vertical = 8.dp) // Outer padding for screen content
         ) {
             Text(

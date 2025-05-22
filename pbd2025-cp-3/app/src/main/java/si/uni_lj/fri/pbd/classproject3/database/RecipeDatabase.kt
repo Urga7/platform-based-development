@@ -27,7 +27,8 @@ abstract class RecipeDatabase : RoomDatabase() {
          * @return The singleton instance of RecipeDatabase.
          */
         fun getDatabase(context: Context): RecipeDatabase {
-            // Multiple threads can ask for the database at the same time, ensure we only initialize it once.
+            // Multiple threads can ask for the database at the same time,
+            // so we ensure we only initialize it once.
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
@@ -37,8 +38,6 @@ abstract class RecipeDatabase : RoomDatabase() {
                     .fallbackToDestructiveMigration(false)
                     .build()
                 INSTANCE = instance
-
-                // Return instance
                 instance
             }
         }

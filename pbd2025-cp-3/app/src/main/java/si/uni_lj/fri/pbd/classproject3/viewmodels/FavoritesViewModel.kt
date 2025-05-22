@@ -15,7 +15,7 @@ data class FavoritesUiState(
     val errorMessage: String? = null
 )
 
-class FavoritesViewModel(private val repository: RecipeRepository) : ViewModel() {
+class FavoritesViewModel(repository: RecipeRepository) : ViewModel() {
 
     val uiState: StateFlow<FavoritesUiState> = repository.getFavoriteRecipes()
         .map { recipes -> FavoritesUiState(favoriteRecipes = recipes, isLoading = false) }
@@ -24,11 +24,4 @@ class FavoritesViewModel(private val repository: RecipeRepository) : ViewModel()
             started = SharingStarted.WhileSubscribed(5000), // Keep flow active for 5s after last subscriber
             initialValue = FavoritesUiState(isLoading = true) // Initial state while waiting for first data
         )
-
-    /**
-     * Called when an error message has been shown and should be cleared.
-     */
-    fun errorMessageShown() {
-
-    }
 }

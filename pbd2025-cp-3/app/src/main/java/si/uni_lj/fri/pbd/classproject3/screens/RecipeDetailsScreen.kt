@@ -88,7 +88,7 @@ fun RecipeDetailsScreen(
                     modifier = Modifier.padding(paddingValues)
                 )
             }
-            else -> { // Error or no data, message handled by snackbar or could show text here
+            else -> { // Error or no data
                 Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
                     Text("Could not load recipe details.")
                 }
@@ -163,10 +163,10 @@ fun RecipeDetailsContent(recipe: RecipeDetailsIM, modifier: Modifier = Modifier)
         Text(
             text = recipe.strInstructions?.trim() ?: "No instructions provided.",
             style = MaterialTheme.typography.bodyLarge,
-            lineHeight = 24.sp // Improve readability of instructions
+            lineHeight = 24.sp
         )
 
-        // YouTube Link (Optional)
+        // YouTube Link
         recipe.strYoutube?.takeIf { it.isNotBlank() }?.let { youtubeUrl ->
             Spacer(modifier = Modifier.height(24.dp))
             Text("Watch on YouTube:", style = MaterialTheme.typography.titleMedium)
@@ -185,7 +185,7 @@ fun formatIngredientsAndMeasures(recipe: RecipeDetailsIM): List<Pair<String, Str
     val fields = recipe.javaClass.declaredFields
     val measuresMap = mutableMapOf<String, String>()
 
-    // First, collect all measures with their corresponding number
+    // Collect all measures with their corresponding number
     for (i in 1..20) {
         val measureField = fields.firstOrNull { it.name == "strMeasure$i" }
         measureField?.isAccessible = true
@@ -195,7 +195,7 @@ fun formatIngredientsAndMeasures(recipe: RecipeDetailsIM): List<Pair<String, Str
         }
     }
 
-    // Then, collect ingredients and pair them with their measures
+    // Collect ingredients and pair them with their measures
     for (i in 1..20) {
         val ingredientField = fields.firstOrNull { it.name == "strIngredient$i" }
         ingredientField?.isAccessible = true

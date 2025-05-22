@@ -65,8 +65,7 @@ fun AppNavigation(
             val fromSearch = backStackEntry.arguments?.getBoolean("fromSearch")
             val detailsViewModel: DetailsViewModel = viewModel(factory = factory)
 
-            if (recipeId == null || fromSearch == null) {
-                // Missing arguments
+            if (recipeId == null || fromSearch == null) { // Missing arguments
                 navController.popBackStack()
                 return@composable
             }
