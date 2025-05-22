@@ -33,8 +33,8 @@ fun RecipeGridItem(recipe: RecipeSummaryIM, onClick: () -> Unit) {
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(recipe.strMealThumb)
                     .crossfade(true)
-                    .placeholder(R.drawable.ic_placeholder_image) // Create a placeholder drawable
-                    .error(R.drawable.ic_error_image) // Create an error drawable
+                    .placeholder(R.drawable.ic_placeholder_image)
+                    .error(R.drawable.ic_error_image)
                     .build(),
                 contentDescription = recipe.strMeal,
                 contentScale = ContentScale.Crop,

@@ -111,9 +111,7 @@ fun SearchScreen(
                         }
                     }
                 } else if (!uiState.isLoadingIngredients && uiState.errorMessage == null) {
-                    // This is the "Could not load ingredients" state.
                     // The Column is scrollable here due to !shouldShowRecipeGrid.
-                    // Add a Spacer with weight to push this message down if the Column needs to fill height.
                     Spacer(modifier = Modifier.weight(0.2f)) // Pushes content down a bit
                     Text(
                         "Could not load ingredients. Check your connection and swipe down to retry.",
@@ -126,11 +124,9 @@ fun SearchScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Content Area: Recipes Grid or Messages
-                // This Box will fill the remaining vertical space if the Column is not scrollable (i.e., when grid is shown)
-                // or be part of the scrollable content if the Column is scrollable.
                 Box(
                     modifier = Modifier
-                        .weight(1f) // Ensures this section tries to take available space
+                        .weight(1f)
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
@@ -150,7 +146,7 @@ fun SearchScreen(
                                 ),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxSize() // Grid fills the space given by this Box
+                                modifier = Modifier.fillMaxSize()
                             ) {
                                 items(uiState.recipes, key = { it.idMeal }) { recipe ->
                                     RecipeGridItem(recipe = recipe, onClick = { onRecipeClick(recipe.idMeal) })
@@ -163,14 +159,11 @@ fun SearchScreen(
                                 textAlign = TextAlign.Center
                             )
                         }
-                        // Default empty state for this Box if no other condition met
-                        // (e.g., no ingredient selected yet, and ingredients did load).
-                        // The parent Column's scroll + weighted spacers handle the overall scrollability.
+
                         else -> {
                             if (uiState.ingredients.isNotEmpty() && selectedIngredientName == null && !uiState.isLoadingIngredients) {
                                 Text("Select an ingredient to see recipes.", textAlign = TextAlign.Center)
                             }
-                            // Implicitly, this Box with weight(1f) helps the scrollable Column have extent.
                         }
                     }
                 }

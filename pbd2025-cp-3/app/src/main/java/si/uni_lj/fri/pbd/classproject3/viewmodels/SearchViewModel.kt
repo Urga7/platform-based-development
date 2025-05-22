@@ -1,6 +1,7 @@
 package si.uni_lj.fri.pbd.classproject3.viewmodels
 
 import android.os.SystemClock
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,26 +81,26 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
             )
             try {
                 val recipesList = repository.getRecipesByIngredient(ingredientName)
-                if (recipesList != null) {
-                    if (recipesList.isEmpty()) {
-                        _uiState.value = _uiState.value.copy(
-                            noRecipesMessage = "Sorry, no recipes for '$ingredientName' exist.",
-                            isLoadingRecipes = false,
-                            recipes = emptyList()
-                        )
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            recipes = recipesList,
-                            isLoadingRecipes = false
-                        )
-                    }
-                } else {
+                Log.d("SearchViewModel", recipesList.toString())
+                if (recipesList == null) {
                     _uiState.value = _uiState.value.copy(
                         errorMessage = "Could not load recipes for '$ingredientName'.",
                         isLoadingRecipes = false,
                         recipes = emptyList()
                     )
+                } else if (recipesList.isEmpty()) {
+                    _uiState.value = _uiState.value.copy(
+                        noRecipesMessage = "Sorry, no recipes for '$ingredientName' exist.",
+                        isLoadingRecipes = false,
+                        recipes = emptyList()
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        recipes = recipesList,
+                        isLoadingRecipes = false
+                    )
                 }
+
                 lastFetchTimeMillis = SystemClock.elapsedRealtime()
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -116,13 +117,6 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
      */
     fun errorMessageShown() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
-    }
-
-    /**
-     * Called when the "no recipes" message has been shown and should be cleared (e.g., on new selection).
-     */
-    fun noRecipesMessageShown() {
-        _uiState.value = _uiState.value.copy(noRecipesMessage = null)
     }
 
     /**

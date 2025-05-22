@@ -50,7 +50,12 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val restApi: Re
         return withContext(Dispatchers.IO) {
             try {
                 val response = restApi.getRecipesByIngredient(ingredient)
-                response?.recipes?.map { Mapper.mapRecipeSummaryDtoToRecipeSummaryIm(it) }
+                val dtoList = response?.recipes
+                if (dtoList == null && response != null) {
+                    emptyList<RecipeSummaryIM>()
+                } else {
+                    dtoList?.map { Mapper.mapRecipeSummaryDtoToRecipeSummaryIm(it) }
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching recipes by ingredient '$ingredient': ${e.message}", e)
                 null

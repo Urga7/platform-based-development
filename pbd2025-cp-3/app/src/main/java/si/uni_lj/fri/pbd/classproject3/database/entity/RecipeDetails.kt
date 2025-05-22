@@ -2,7 +2,6 @@ package si.uni_lj.fri.pbd.classproject3.database.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 
 @Entity
@@ -157,7 +156,4 @@ data class RecipeDetails(
 
     @ColumnInfo(name = "strSource")
     var strSource: String? = null
-) {
-    @Ignore
-    constructor() : this(null)
-}
+)
