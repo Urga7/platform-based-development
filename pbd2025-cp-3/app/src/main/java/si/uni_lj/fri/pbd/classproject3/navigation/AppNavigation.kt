@@ -73,7 +73,7 @@ fun AppNavigation(
 
             RecipeDetailsScreen(
                 recipeId = recipeId,
-                fromSearchScreen = fromSearch,
+                startedFromSearchScreen = fromSearch,
                 detailsViewModel = detailsViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )

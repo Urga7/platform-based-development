@@ -2,8 +2,6 @@ package si.uni_lj.fri.pbd.classproject3.models.dto
 
 import com.google.gson.annotations.SerializedName
 
-// This DTO will be very similar to the RecipeDetails entity,
-// but all fields are nullable as they come from JSON.
 data class RecipeDetailsDTO(
     @SerializedName("idMeal") val idMeal: String? = null,
     @SerializedName("strMeal") val strMeal: String? = null,

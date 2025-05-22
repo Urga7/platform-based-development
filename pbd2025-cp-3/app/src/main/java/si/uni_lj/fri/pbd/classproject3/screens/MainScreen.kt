@@ -21,7 +21,7 @@ import si.uni_lj.fri.pbd.classproject3.viewmodels.ViewModelFactory
  *
  * @param factory The ViewModelFactory for creating ViewModels, passed down to AppNavigation.
  */
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") // Will be used by NavHost
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") // Will be used by NavHostv
 @Composable
 fun MainScreen(factory: ViewModelFactory) {
     val navController = rememberNavController()

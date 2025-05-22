@@ -34,13 +34,10 @@ abstract class RecipeDatabase : RoomDatabase() {
                     RecipeDatabase::class.java,
                     Constants.DB_NAME
                 )
-                    // Migration strategy if the schema changes.
-                    // For this project, destructive migration is fine.
-                    .fallbackToDestructiveMigration()
-                    // Removed .allowMainThreadQueries() as per project requirements.
-                    // Database operations should be on background threads.
+                    .fallbackToDestructiveMigration(false)
                     .build()
                 INSTANCE = instance
+
                 // Return instance
                 instance
             }

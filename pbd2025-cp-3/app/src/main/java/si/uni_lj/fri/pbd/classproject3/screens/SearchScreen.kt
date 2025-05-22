@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
@@ -58,10 +57,10 @@ fun SearchScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+    ) { scaffoldPaddingValues ->
         Box( // This Box has the pullRefresh modifier
             modifier = Modifier
-                .padding(paddingValues)
+                .padding(scaffoldPaddingValues)
                 .pullRefresh(pullRefreshState)
                 .fillMaxSize()
         ) {
@@ -71,9 +70,7 @@ fun SearchScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Transparent) // For consistent touch behavior
-                    // Apply verticalScroll only if not displaying the LazyVerticalGrid.
-                    // This makes the Column scrollable for static messages/empty states.
+                    .background(Color.Transparent)
                     .then(if (!shouldShowRecipeGrid) Modifier.verticalScroll(rememberScrollState()) else Modifier)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -119,7 +116,7 @@ fun SearchScreen(
                     // Add a Spacer with weight to push this message down if the Column needs to fill height.
                     Spacer(modifier = Modifier.weight(0.2f)) // Pushes content down a bit
                     Text(
-                        "Could not load ingredients. Swipe down to retry or check connection.",
+                        "Could not load ingredients. Check your connection and swipe down to retry.",
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(16.dp)
                     )
@@ -147,7 +144,10 @@ fun SearchScreen(
                         shouldShowRecipeGrid -> {
                             LazyVerticalGrid(
                                 columns = GridCells.Fixed(2),
-                                contentPadding = PaddingValues(vertical = 8.dp),
+                                contentPadding = PaddingValues(
+                                    top = 8.dp,
+                                    bottom = 64.dp + scaffoldPaddingValues.calculateBottomPadding()
+                                ),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.fillMaxSize() // Grid fills the space given by this Box
@@ -175,12 +175,6 @@ fun SearchScreen(
                     }
                 }
             }
-
-            PullRefreshIndicator(
-                refreshing = isActuallyRefreshing,
-                state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
         }
     }
 }

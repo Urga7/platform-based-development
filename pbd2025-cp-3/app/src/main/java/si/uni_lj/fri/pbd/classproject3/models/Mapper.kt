@@ -9,9 +9,9 @@ object Mapper {
 
     fun mapRecipeSummaryDtoToRecipeSummaryIm(rec: RecipeSummaryDTO): RecipeSummaryIM {
         return RecipeSummaryIM(
-            strMeal = rec.name ?: "", // Provide default empty string if name is null
-            strMealThumb = rec.thumbnailUrl ?: "", // Provide default empty string if thumbnailUrl is null
-            idMeal = rec.id ?: "" // Provide default empty string if id is null
+            strMeal = rec.name ?: "",
+            strMealThumb = rec.thumbnailUrl ?: "",
+            idMeal = rec.id ?: ""
         )
     }
 

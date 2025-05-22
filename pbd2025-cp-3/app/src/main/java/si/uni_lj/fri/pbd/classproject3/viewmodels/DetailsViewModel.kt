@@ -24,14 +24,14 @@ class DetailsViewModel(private val repository: RecipeRepository) : ViewModel() {
     /**
      * Fetches recipe details.
      * @param recipeId The ID of the recipe to fetch.
-     * @param fromSearchScreen True if navigation is from SearchScreen (fetch from API),
+     * @param startedFromSearchScreen True if navigation is from SearchScreen (fetch from API),
      * false if from FavoritesScreen (fetch from DB).
      */
-    fun fetchRecipeDetails(recipeId: String, fromSearchScreen: Boolean) {
+    fun fetchRecipeDetails(recipeId: String, startedFromSearchScreen: Boolean) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             try {
-                val details = if (fromSearchScreen) {
+                val details = if (startedFromSearchScreen) {
                     repository.getRecipeDetailsFromApi(recipeId)
                 } else {
                     repository.getRecipeDetailsFromDb(recipeId)

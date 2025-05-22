@@ -19,14 +19,9 @@ import si.uni_lj.fri.pbd.classproject3.rest.RestAPI
  * @property recipeDao The Data Access Object for recipe data.
  * @property restApi The Retrofit API service for fetching data from the network.
  */
-class RecipeRepository(
-    private val recipeDao: RecipeDao,
-    private val restApi: RestAPI
-) {
+class RecipeRepository(private val recipeDao: RecipeDao, private val restApi: RestAPI) {
 
-    companion object {
-        private const val TAG = "RecipeRepository"
-    }
+    companion object { private const val TAG = "RecipeRepository" }
 
     /**
      * Fetches a list of all possible main ingredients from the remote API.
@@ -78,9 +73,7 @@ class RecipeRepository(
                 if (recipeDetailsDto != null) {
                     val localRecipe = recipeDao.getRecipeByMealId(recipeId)
                     Mapper.mapRecipeDetailsDtoToRecipeDetailsIm(localRecipe?.isFavorite, recipeDetailsDto)
-                } else {
-                    null
-                }
+                } else null
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching recipe details for ID '$recipeId' from API: ${e.message}", e)
                 null

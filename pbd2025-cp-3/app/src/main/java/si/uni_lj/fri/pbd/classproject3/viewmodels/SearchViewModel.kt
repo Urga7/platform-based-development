@@ -30,9 +30,7 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
     private var lastFetchTimeMillis: Long = 0
     private val fetchDebounceMillis: Long = 5000 // 5 seconds
 
-    init {
-        fetchIngredients()
-    }
+    init { fetchIngredients() }
 
     /**
      * Fetches the list of ingredients from the repository.

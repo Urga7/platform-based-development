@@ -4,5 +4,5 @@ import com.google.gson.annotations.SerializedName
 
 data class RecipesByIdDTO(
     @SerializedName("meals")
-    val recipes: List<RecipeDetailsDTO>? // API returns a list, but it should contain one item or be null
+    val recipes: List<RecipeDetailsDTO>?
 )

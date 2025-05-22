@@ -26,14 +26,14 @@ import si.uni_lj.fri.pbd.classproject3.viewmodels.DetailsViewModel
 @Composable
 fun RecipeDetailsScreen(
     recipeId: String,
-    fromSearchScreen: Boolean,
+    startedFromSearchScreen: Boolean,
     detailsViewModel: DetailsViewModel,
     onNavigateBack: () -> Unit
 ) {
     val uiState by detailsViewModel.uiState.collectAsState()
 
-    LaunchedEffect(recipeId, fromSearchScreen) {
-        detailsViewModel.fetchRecipeDetails(recipeId, fromSearchScreen)
+    LaunchedEffect(recipeId, startedFromSearchScreen) {
+        detailsViewModel.fetchRecipeDetails(recipeId, startedFromSearchScreen)
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -146,7 +146,7 @@ fun RecipeDetailsContent(recipe: RecipeDetailsIM, modifier: Modifier = Modifier)
         // Ingredients and Measures
         Text("Ingredients:", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
         Spacer(modifier = Modifier.height(8.dp))
-        FormatIngredientsAndMeasures(recipe).forEach { (ingredient, measure) ->
+        formatIngredientsAndMeasures(recipe).forEach { (ingredient, measure) ->
             if (ingredient.isNotBlank()) {
                 Text(
                     text = "• $ingredient" + if (measure.isNotBlank()) " ($measure)" else "",
@@ -180,7 +180,7 @@ fun RecipeDetailsContent(recipe: RecipeDetailsIM, modifier: Modifier = Modifier)
  * Helper function to parse and combine ingredients and their measures from RecipeDetailsIM.
  * The API stores ingredients and measures in separate fields (strIngredient1, strMeasure1, etc.).
  */
-fun FormatIngredientsAndMeasures(recipe: RecipeDetailsIM): List<Pair<String, String>> {
+fun formatIngredientsAndMeasures(recipe: RecipeDetailsIM): List<Pair<String, String>> {
     val ingredients = mutableListOf<Pair<String, String>>()
     val fields = recipe.javaClass.declaredFields
     val measuresMap = mutableMapOf<String, String>()

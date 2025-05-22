@@ -49,7 +49,7 @@ fun RecipeApp() {
         // Pre-populate database during splash screen
         searchViewModel.prepopulateDatabase()
         // Splash screen duration
-        delay(3000) // Keep splash screen for at most 3 seconds
+        delay(2900) // Keep splash screen for at most 2.9s
         showSplashScreen = false
     }
 
