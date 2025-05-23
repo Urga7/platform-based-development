@@ -12,7 +12,9 @@ import si.uni_lj.fri.pbd.classproject3.models.dto.IngredientDTO
 import si.uni_lj.fri.pbd.classproject3.models.RecipeSummaryIM
 import si.uni_lj.fri.pbd.classproject3.repository.RecipeRepository
 
-// Represents the state of the SearchScreen UI
+/**
+ * Represents the UI state for the search screen.
+ */
 data class SearchUiState(
     val ingredients: List<IngredientDTO> = emptyList(),
     val recipes: List<RecipeSummaryIM> = emptyList(),

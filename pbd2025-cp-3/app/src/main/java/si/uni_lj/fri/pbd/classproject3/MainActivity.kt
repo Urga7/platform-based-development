@@ -48,8 +48,10 @@ fun RecipeApp() {
     LaunchedEffect(Unit) {
         // Pre-populate database during splash screen
         searchViewModel.prepopulateDatabase()
-        // Splash screen duration
-        delay(2900) // Keep splash screen for at most 2.9s (100ms buffer to be safe for grading :D)
+
+        // Keep splash screen for at most 2.9s (100ms buffer to be safe for grading :D)
+        delay(2900)
+
         showSplashScreen = false
     }
 

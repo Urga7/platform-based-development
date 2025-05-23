@@ -10,8 +10,6 @@ import si.uni_lj.fri.pbd.classproject3.rest.RestAPI
 
 /**
  * Factory for creating ViewModels with dependencies.
- * This is particularly useful for ViewModels that require constructor parameters,
- * like our RecipeRepository.
  *
  * @param application The application context, needed to initialize the database and repository.
  */

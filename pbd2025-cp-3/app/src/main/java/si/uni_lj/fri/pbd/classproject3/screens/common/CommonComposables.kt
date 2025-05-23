@@ -40,7 +40,7 @@ fun RecipeGridItem(recipe: RecipeSummaryIM, onClick: () -> Unit) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f) // Square image
+                    .aspectRatio(1f)
             )
             Text(
                 text = recipe.strMeal,

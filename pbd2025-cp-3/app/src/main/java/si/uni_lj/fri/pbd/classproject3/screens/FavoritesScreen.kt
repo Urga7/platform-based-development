@@ -36,7 +36,7 @@ fun FavoritesScreen(
     val uiState by favoritesViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Handle showing snackbar for errors
+    // Snackbar for errors
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let {
             snackbarHostState.showSnackbar(
@@ -52,7 +52,7 @@ fun FavoritesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 8.dp) // Outer padding for screen content
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Text(
                 text = "Your Favorite Recipes",
@@ -69,7 +69,7 @@ fun FavoritesScreen(
                 uiState.favoriteRecipes.isEmpty() -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            "You haven't added any favorite recipes yet. \nStar some recipes in the search screen!",
+                            "You haven't added any favorite recipes yet. \nMark some recipes as favorite in the search screen!",
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -78,7 +78,10 @@ fun FavoritesScreen(
                 else -> {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2), // Two columns
-                        contentPadding = PaddingValues(vertical = 8.dp),
+                        contentPadding = PaddingValues(
+                            top = 8.dp,
+                            bottom = 64.dp + paddingValues.calculateBottomPadding()
+                        ),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
