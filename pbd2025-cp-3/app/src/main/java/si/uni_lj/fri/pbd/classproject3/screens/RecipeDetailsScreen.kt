@@ -172,7 +172,7 @@ fun RecipeDetailsContent(recipe: RecipeDetailsIM, modifier: Modifier = Modifier)
             Text("Watch on YouTube:", style = MaterialTheme.typography.titleMedium)
             Text(youtubeUrl, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 
