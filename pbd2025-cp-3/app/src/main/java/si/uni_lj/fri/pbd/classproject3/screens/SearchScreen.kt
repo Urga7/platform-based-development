@@ -1,6 +1,7 @@
 package si.uni_lj.fri.pbd.classproject3.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import si.uni_lj.fri.pbd.classproject3.screens.common.RecipeGridItem
 import si.uni_lj.fri.pbd.classproject3.viewmodels.SearchViewModel
+import androidx.compose.foundation.lazy.items
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -118,15 +120,17 @@ fun SearchScreen(
                                     expanded = isDropdownExpanded,
                                     onDismissRequest = { isDropdownExpanded = false }
                                 ) {
-                                    uiState.ingredients.forEach { ingredient ->
-                                        ingredient.strIngredient?.let { name ->
-                                            DropdownMenuItem(
-                                                text = { Text(name) },
-                                                onClick = {
-                                                    searchViewModel.fetchRecipesByIngredient(name, forceRefresh = false)
-                                                    isDropdownExpanded = false
-                                                }
-                                            )
+                                    LazyColumn(modifier = Modifier.size(600.dp)) {
+                                        items(uiState.ingredients) { ingredient ->
+                                            ingredient.strIngredient?.let { name ->
+                                                DropdownMenuItem(
+                                                    text = { Text(name) },
+                                                    onClick = {
+                                                        searchViewModel.fetchRecipesByIngredient(name, forceRefresh = false)
+                                                        isDropdownExpanded = false
+                                                    }
+                                                )
+                                            }
                                         }
                                     }
                                 }
