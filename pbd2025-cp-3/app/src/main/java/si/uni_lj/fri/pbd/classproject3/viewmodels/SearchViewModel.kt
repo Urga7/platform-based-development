@@ -122,12 +122,11 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
     }
 
     /**
-     * Pre-populates the database with some random recipes.
-     * This is intended to be called from SplashScreen.
+     * Called from SplashScreen to perform pre-population tasks.
      */
     fun prepopulateDatabase() {
         viewModelScope.launch {
-            repository.prepopulateDatabaseWithRandomRecipes()
+            repository.prepopulateDatabaseWithRecipes()
         }
     }
 }

@@ -69,7 +69,7 @@ fun FavoritesScreen(
                 uiState.favoriteRecipes.isEmpty() -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            "You haven't added any favorite recipes yet. \nMark some recipes as favorite in the search screen!",
+                            "You have no recipes marked as favorite yet. \nMark some recipes as favorite in the search screen!",
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyLarge
                         )

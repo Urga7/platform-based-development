@@ -229,41 +229,58 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val restApi: Re
     }
 
     /**
-     * Fetches a few random recipes from the API and stores them in the local database.
-     * This is intended for pre-populating the database during SplashScreen.
-     * It fetches a list of common ingredients first, then picks a few to get recipes.
+     * Fetches the main ingredient list from the API. Then, for a specified number of these
+     * ingredients, it fetches recipes and stores them in the local database
+     * if they don't already exist.
      *
-     * @param numberOfRecipesToPrepopulate Approximate number of recipes to try and fetch.
+     * @param numberOfIngredientsToProcess The number of ingredients from the fetched list
+     * for which recipes should be fetched and pre-populated.
      */
-    suspend fun prepopulateDatabaseWithRandomRecipes(numberOfRecipesToPrepopulate: Int = 5) {
+    suspend fun prepopulateDatabaseWithRecipes(numberOfIngredientsToProcess: Int = 4) {
         withContext(Dispatchers.IO) {
             try {
-                Log.d(TAG, "Starting database pre-population...")
-                val commonIngredients = listOf("Chicken", "Beef", "Salmon", "Eggs", "Pasta", "Potatoes", "Onion", "Garlic", "Tomatoes", "Cheese")
-                var recipesAdded = 0
+                Log.d(TAG, "Pre-population step: Fetching main ingredient list from API...")
+                val allIngredientsResponse = restApi.getAllIngredients() // Fetch the ingredient list
+                val availableIngredients = allIngredientsResponse?.ingredients
 
-                for (ingredientName in commonIngredients.shuffled()) {
-                    if (recipesAdded >= numberOfRecipesToPrepopulate) break
+                if (availableIngredients.isNullOrEmpty()) {
+                    Log.w(TAG, "Failed to fetch main ingredient list or list is empty. Skipping recipe pre-population.")
+                    return@withContext
+                }
+                Log.d(TAG, "Successfully fetched ${availableIngredients.size} ingredients from API.")
+
+                if (numberOfIngredientsToProcess <= 0) {
+                    Log.d(TAG, "Recipe pre-population skipped as numberOfIngredientsToProcess or recipesPerIngredient is 0.")
+                    return@withContext
+                }
+
+                Log.d(TAG, "Starting database pre-population using recipes from the first $numberOfIngredientsToProcess fetched ingredients...")
+                var recipesActuallyAdded = 0 // To count total recipes added
+                val ingredientsToProcess = availableIngredients.take(numberOfIngredientsToProcess)
+                for (ingredientDto in ingredientsToProcess) {
+                    val ingredientName = ingredientDto.strIngredient
+                    if (ingredientName.isNullOrBlank()) continue
+
+                    Log.d(TAG, "Processing ingredient for recipe pre-population: $ingredientName")
                     val recipesByIngredient = restApi.getRecipesByIngredient(ingredientName)
-                    recipesByIngredient?.recipes?.take(2)?.forEach { recipeSummaryDto ->
-                        if (recipesAdded >= numberOfRecipesToPrepopulate) return@forEach
+                    recipesByIngredient?.recipes?.forEach { recipeSummaryDto ->
                         if (recipeSummaryDto.id == null) return@forEach
 
                         val existingRecipe = recipeDao.getRecipeByMealId(recipeSummaryDto.id)
-                        if (existingRecipe == null) {
-                            val recipeDetailsDto = restApi.getRecipeDetailsById(recipeSummaryDto.id)?.recipes?.firstOrNull()
-                            if (recipeDetailsDto != null) {
-                                val recipeEntity = Mapper.mapRecipeDetailsDtoToRecipeDetails(false, recipeDetailsDto)
-                                recipeDao.insertRecipe(recipeEntity) // Insert new, not as favorite
-                                recipesAdded++
-                                Log.d(TAG, "Pre-populated with: ${recipeEntity.strMeal}")
-                            }
-                        }
+                        if(existingRecipe != null) return@forEach
+
+                        val recipeDetailsDto = restApi.getRecipeDetailsById(recipeSummaryDto.id)?.recipes?.firstOrNull()
+                        if (recipeDetailsDto == null) return@forEach
+
+                        val recipeEntity = Mapper.mapRecipeDetailsDtoToRecipeDetails(false, recipeDetailsDto)
+                        recipeDao.insertRecipe(recipeEntity)
+                        recipesActuallyAdded++
+                        Log.d(TAG, "Pre-populated DB with recipe: ${recipeEntity.strMeal} (from ingredient: $ingredientName)")
                     }
                 }
-                Log.d(TAG, "Database pre-population attempt finished. Added $recipesAdded recipes.")
+                Log.d(TAG, "Database recipe pre-population attempt finished. Added $recipesActuallyAdded recipes from $numberOfIngredientsToProcess processed ingredients.")
             } catch (e: Exception) {
-                Log.e(TAG, "Error during database pre-population: ${e.message}", e)
+                Log.e(TAG, "Error during pre-population tasks: ${e.message}", e)
             }
         }
     }
