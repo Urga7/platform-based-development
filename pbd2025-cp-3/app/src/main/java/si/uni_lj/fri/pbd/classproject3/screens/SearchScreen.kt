@@ -44,6 +44,7 @@ fun SearchScreen(
         }
     )
 
+    // Snackbar for errors
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let {
@@ -62,14 +63,14 @@ fun SearchScreen(
                 .fillMaxSize()
         ) {
             when {
-                // Case 1: Initial ingredients loading phase
+                // Initial ingredients loading phase
                 uiState.isLoadingIngredients && uiState.ingredients.isEmpty() && uiState.selectedIngredient == null -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 }
 
-                // Case 2: Failed to load ingredients initially
+                // Failed to load ingredients initially
                 !uiState.isLoadingIngredients && uiState.ingredients.isEmpty() && uiState.selectedIngredient == null -> {
                     Column(
                         modifier = Modifier
@@ -86,7 +87,7 @@ fun SearchScreen(
                     }
                 }
 
-                // Case 3: Ingredients are loaded, or an ingredient is selected (normal operation)
+                // Ingredients are loaded, or an ingredient is selected (normal operation)
                 else -> {
                     Column(
                         modifier = Modifier
@@ -140,7 +141,6 @@ fun SearchScreen(
                                     }
                                 }
                             }
-                            // Consistent spacer after the dropdown if it's shown.
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
@@ -149,22 +149,22 @@ fun SearchScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             when {
-                                // 1. Still loading recipes for the selected ingredient
+                                // Still loading recipes for the selected ingredient
                                 uiState.selectedIngredient != null && uiState.isLoadingRecipes && uiState.recipes.isEmpty() -> {
                                     CircularProgressIndicator()
                                 }
 
-                                // 2. Display error message if present (e.g., "Connection lost...")
-                                //    This takes precedence if an ingredient is selected, we're not loading, and an error occurred.
+                                // Display error message if present
+                                // - An ingredient is selected, we're not loading, and an error occurred
                                 uiState.selectedIngredient != null && !uiState.isLoadingRecipes && uiState.errorMessage != null -> {
                                     Text(
-                                        text = uiState.errorMessage!!, // This will show "Connection lost..."
+                                        text = uiState.errorMessage.toString(),
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.padding(16.dp)
                                     )
                                 }
 
-                                // 3. Specific "no recipes" message from ViewModel (successful fetch, but API found nothing)
+                                // Specific "no recipes" message from ViewModel (successful fetch, but API found nothing)
                                 uiState.selectedIngredient != null && !uiState.isLoadingRecipes && uiState.noRecipesMessage != null -> {
                                     Text(
                                         uiState.noRecipesMessage!!,
@@ -173,7 +173,7 @@ fun SearchScreen(
                                     )
                                 }
 
-                                // 4. Recipes are loaded and available
+                                // Recipes are loaded and available
                                 uiState.selectedIngredient != null && uiState.recipes.isNotEmpty() -> {
                                     LazyVerticalGrid(
                                         columns = GridCells.Fixed(2),
@@ -188,19 +188,17 @@ fun SearchScreen(
                                     }
                                 }
 
-                                // 5. Fallback: Ingredient selected, not loading, recipes empty, and no specific error/noRecipesMessage yet.
-                                //    This typically means the initial state after selection before recipes load or a generic "not found".
-                                uiState.selectedIngredient != null && !uiState.isLoadingRecipes && uiState.recipes.isEmpty()-> {
+                                // Fallback: Usually a connection issue
+                                uiState.selectedIngredient != null -> {
                                     Text(
-                                        // This message will now be less likely to show if errorMessage handles the failure.
                                         "Could not load recipes for '${uiState.selectedIngredient}'. Please check your connection.",
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.padding(16.dp)
                                     )
                                 }
 
-                                // 6. Prompt to select an ingredient if ingredients are loaded but none is selected yet
-                                uiState.ingredients.isNotEmpty() && !uiState.isLoadingIngredients && uiState.selectedIngredient == null -> {
+                                // Prompt to select an ingredient if ingredients are loaded but none is selected yet
+                                uiState.ingredients.isNotEmpty() && !uiState.isLoadingIngredients -> {
                                     Text(
                                         "Select an ingredient to see recipes.",
                                         textAlign = TextAlign.Center,

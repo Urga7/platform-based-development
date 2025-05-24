@@ -1,7 +1,6 @@
 package si.uni_lj.fri.pbd.classproject3.viewmodels
 
 import android.os.SystemClock
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,11 +10,12 @@ import kotlinx.coroutines.launch
 import si.uni_lj.fri.pbd.classproject3.models.dto.IngredientDTO
 import si.uni_lj.fri.pbd.classproject3.models.RecipeSummaryIM
 import si.uni_lj.fri.pbd.classproject3.repository.RecipeRepository
-import java.io.IOException // Import IOException
-import java.net.UnknownHostException // Import UnknownHostException
+import java.io.IOException
+import java.net.UnknownHostException
 
-
-// SearchUiState remains the same for this solution, we'll make errorMessage more descriptive
+/**
+ * Represents the UI state for the search screen.
+ */
 data class SearchUiState(
     val ingredients: List<IngredientDTO> = emptyList(),
     val recipes: List<RecipeSummaryIM> = emptyList(),
@@ -36,6 +36,9 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
 
     init { fetchIngredients() }
 
+    /**
+     * Fetches the list of ingredients from the repository.
+     */
     fun fetchIngredients() {
         viewModelScope.launch {
             // Clear previous errors when starting a new fetch
@@ -63,6 +66,12 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
         }
     }
 
+    /**
+     * Fetches recipes for the given ingredient.
+     * Includes a debounce mechanism for swipe-to-refresh.
+     * @param ingredientName The name of the ingredient to search for.
+     * @param forceRefresh If true, bypasses the debounce mechanism.
+     */
     fun fetchRecipesByIngredient(ingredientName: String, forceRefresh: Boolean = false) {
         val currentTime = SystemClock.elapsedRealtime()
         if (!forceRefresh && (currentTime - lastFetchTimeMillis < fetchDebounceMillis) && ingredientName == _uiState.value.selectedIngredient) {
@@ -89,9 +98,6 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
                         errorMessage = null // Clear error on successful fetch
                     )
                 } else {
-                    // This case implies the repository returned null, which it does on an exception during fetch.
-                    // The catch block below should ideally handle this.
-                    // However, to be safe, if recipesList is null and not caught as specific exception:
                     _uiState.value = _uiState.value.copy(
                         isLoadingRecipes = false,
                         errorMessage = "Could not load recipes for '$ingredientName'. Please check your connection.",
@@ -100,7 +106,7 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
                 }
                 lastFetchTimeMillis = SystemClock.elapsedRealtime()
             } catch (e: Exception) {
-                // This is where we explicitly check for network errors
+                // Check for network errors
                 val specificMessage = if (e is UnknownHostException || e is IOException) {
                     "Connection lost. Please check your internet connection and try again."
                 } else {
@@ -110,16 +116,22 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
                     isLoadingRecipes = false,
                     errorMessage = specificMessage,
                     recipes = emptyList(),
-                    noRecipesMessage = null // Ensure noRecipesMessage is cleared if there's an error
+                    noRecipesMessage = null // noRecipesMessage is cleared if there's an error
                 )
             }
         }
     }
 
+    /**
+     * Called when an error message has been shown and should be cleared.
+     */
     fun errorMessageShown() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
+    /**
+     * Called from SplashScreen to perform pre-population tasks.
+     */
     fun prepopulateDatabase() {
         viewModelScope.launch {
             repository.prepopulateDatabaseWithRecipes()
