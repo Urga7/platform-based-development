@@ -1,5 +1,8 @@
 package si.uni_lj.fri.pbd.classproject3.screens
 
+import android.content.Intent
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -14,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -21,6 +25,7 @@ import coil.request.ImageRequest
 import si.uni_lj.fri.pbd.classproject3.R
 import si.uni_lj.fri.pbd.classproject3.models.RecipeDetailsIM
 import si.uni_lj.fri.pbd.classproject3.viewmodels.DetailsViewModel
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,6 +104,8 @@ fun RecipeDetailsScreen(
 
 @Composable
 fun RecipeDetailsContent(recipe: RecipeDetailsIM, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -170,7 +177,20 @@ fun RecipeDetailsContent(recipe: RecipeDetailsIM, modifier: Modifier = Modifier)
         recipe.strYoutube?.takeIf { it.isNotBlank() }?.let { youtubeUrl ->
             Spacer(modifier = Modifier.height(24.dp))
             Text("Watch on YouTube:", style = MaterialTheme.typography.titleMedium)
-            Text(youtubeUrl, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+            Text(
+                text = youtubeUrl,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier.clickable {
+                    val intent = Intent(Intent.ACTION_VIEW, youtubeUrl.toUri())
+                    try {
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        Log.e("RecipeDetailsScreen", "Error opening YouTube link", e)
+                    }
+                }
+            )
         }
         Spacer(modifier = Modifier.height(80.dp))
     }
