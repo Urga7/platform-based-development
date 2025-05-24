@@ -114,7 +114,12 @@ fun SearchScreen(
                                     readOnly = true,
                                     label = { Text("Main Ingredient") },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                                    modifier = Modifier
+                                        .menuAnchor(
+                                            type = MenuAnchorType.PrimaryEditable,
+                                            enabled = true
+                                        )
+                                        .fillMaxWidth()
                                 )
                                 ExposedDropdownMenu(
                                     expanded = isDropdownExpanded,
