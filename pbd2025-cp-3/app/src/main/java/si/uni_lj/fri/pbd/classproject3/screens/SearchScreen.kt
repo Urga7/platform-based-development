@@ -143,16 +143,24 @@ fun SearchScreen(
                             modifier = Modifier.weight(1f).fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
-                            val shouldShowRecipeGrid = uiState.recipes.isNotEmpty() && uiState.selectedIngredient != null
                             when {
-
-                                // Loading recipes for a selected ingredient
+                                // 1. Still loading recipes for the selected ingredient
                                 uiState.selectedIngredient != null && uiState.isLoadingRecipes && uiState.recipes.isEmpty() -> {
                                     CircularProgressIndicator()
                                 }
 
-                                // Specific message from ViewModel for no recipes
-                                uiState.noRecipesMessage != null -> {
+                                // 2. Display error message if present (e.g., "Connection lost...")
+                                //    This takes precedence if an ingredient is selected, we're not loading, and an error occurred.
+                                uiState.selectedIngredient != null && !uiState.isLoadingRecipes && uiState.errorMessage != null -> {
+                                    Text(
+                                        text = uiState.errorMessage!!, // This will show "Connection lost..."
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                }
+
+                                // 3. Specific "no recipes" message from ViewModel (successful fetch, but API found nothing)
+                                uiState.selectedIngredient != null && !uiState.isLoadingRecipes && uiState.noRecipesMessage != null -> {
                                     Text(
                                         uiState.noRecipesMessage!!,
                                         textAlign = TextAlign.Center,
@@ -160,8 +168,8 @@ fun SearchScreen(
                                     )
                                 }
 
-                                // Display recipe grid
-                                shouldShowRecipeGrid -> {
+                                // 4. Recipes are loaded and available
+                                uiState.selectedIngredient != null && uiState.recipes.isNotEmpty() -> {
                                     LazyVerticalGrid(
                                         columns = GridCells.Fixed(2),
                                         contentPadding = PaddingValues(top = 0.dp, bottom = 64.dp + scaffoldPaddingValues.calculateBottomPadding()),
@@ -175,17 +183,19 @@ fun SearchScreen(
                                     }
                                 }
 
-                                // Message when an ingredient is selected, but no recipes were found (after loading)
-                                uiState.selectedIngredient != null && uiState.noRecipesMessage == null -> {
+                                // 5. Fallback: Ingredient selected, not loading, recipes empty, and no specific error/noRecipesMessage yet.
+                                //    This typically means the initial state after selection before recipes load or a generic "not found".
+                                uiState.selectedIngredient != null && !uiState.isLoadingRecipes && uiState.recipes.isEmpty()-> {
                                     Text(
-                                        "No recipes found for '${uiState.selectedIngredient}'.",
+                                        // This message will now be less likely to show if errorMessage handles the failure.
+                                        "Could not load recipes for '${uiState.selectedIngredient}'. Please check your connection.",
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.padding(16.dp)
                                     )
                                 }
 
-                                // Message to prompt selection if ingredients are loaded but none is selected yet
-                                uiState.ingredients.isNotEmpty() && !uiState.isLoadingIngredients -> {
+                                // 6. Prompt to select an ingredient if ingredients are loaded but none is selected yet
+                                uiState.ingredients.isNotEmpty() && !uiState.isLoadingIngredients && uiState.selectedIngredient == null -> {
                                     Text(
                                         "Select an ingredient to see recipes.",
                                         textAlign = TextAlign.Center,

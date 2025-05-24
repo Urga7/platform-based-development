@@ -11,18 +11,19 @@ import kotlinx.coroutines.launch
 import si.uni_lj.fri.pbd.classproject3.models.dto.IngredientDTO
 import si.uni_lj.fri.pbd.classproject3.models.RecipeSummaryIM
 import si.uni_lj.fri.pbd.classproject3.repository.RecipeRepository
+import java.io.IOException // Import IOException
+import java.net.UnknownHostException // Import UnknownHostException
 
-/**
- * Represents the UI state for the search screen.
- */
+
+// SearchUiState remains the same for this solution, we'll make errorMessage more descriptive
 data class SearchUiState(
     val ingredients: List<IngredientDTO> = emptyList(),
     val recipes: List<RecipeSummaryIM> = emptyList(),
     val isLoadingIngredients: Boolean = false,
     val isLoadingRecipes: Boolean = false,
     val selectedIngredient: String? = null,
-    val errorMessage: String? = null, // For general errors
-    val noRecipesMessage: String? = null // Specific message when no recipes found
+    val errorMessage: String? = null,
+    val noRecipesMessage: String? = null
 )
 
 class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
@@ -35,12 +36,10 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
 
     init { fetchIngredients() }
 
-    /**
-     * Fetches the list of ingredients from the repository.
-     */
     fun fetchIngredients() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoadingIngredients = true, errorMessage = null)
+            // Clear previous errors when starting a new fetch
+            _uiState.value = _uiState.value.copy(isLoadingIngredients = true, errorMessage = null, noRecipesMessage = null)
             try {
                 val ingredientsList = repository.getAllIngredients()
                 _uiState.value = _uiState.value.copy(
@@ -48,28 +47,26 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
                     isLoadingIngredients = false
                 )
                 if (ingredientsList == null) {
-                    _uiState.value = _uiState.value.copy(errorMessage = "Could not load ingredients.")
+                    _uiState.value = _uiState.value.copy(errorMessage = "Could not load ingredients. Check connection and swipe to retry.")
                 }
             } catch (e: Exception) {
+                val specificMessage = if (e is UnknownHostException || e is IOException) {
+                    "Connection lost. Could not load ingredients."
+                } else {
+                    "Error fetching ingredients: ${e.message}"
+                }
                 _uiState.value = _uiState.value.copy(
                     isLoadingIngredients = false,
-                    errorMessage = "Error fetching ingredients: ${e.message}"
+                    errorMessage = specificMessage
                 )
             }
         }
     }
 
-    /**
-     * Fetches recipes for the given ingredient.
-     * Includes a debounce mechanism for swipe-to-refresh.
-     * @param ingredientName The name of the ingredient to search for.
-     * @param forceRefresh If true, bypasses the debounce mechanism.
-     */
     fun fetchRecipesByIngredient(ingredientName: String, forceRefresh: Boolean = false) {
         val currentTime = SystemClock.elapsedRealtime()
         if (!forceRefresh && (currentTime - lastFetchTimeMillis < fetchDebounceMillis) && ingredientName == _uiState.value.selectedIngredient) {
-            // Debounce: Too soon since last fetch for the same ingredient
-            _uiState.value = _uiState.value.copy(isLoadingRecipes = false) // Ensure loading is off if skipped
+            _uiState.value = _uiState.value.copy(isLoadingRecipes = false)
             return
         }
 
@@ -77,53 +74,52 @@ class SearchViewModel(private val repository: RecipeRepository) : ViewModel() {
             _uiState.value = _uiState.value.copy(
                 isLoadingRecipes = true,
                 selectedIngredient = ingredientName,
-                recipes = emptyList(), // Clear previous recipes
-                errorMessage = null,
-                noRecipesMessage = null
+                recipes = emptyList(),      // Clear previous recipes
+                errorMessage = null,        // Clear previous errors for this specific fetch
+                noRecipesMessage = null     // Clear previous no recipes message
             )
             try {
                 val recipesList = repository.getRecipesByIngredient(ingredientName)
-                Log.d("SearchViewModel", recipesList.toString())
-                if (recipesList == null) {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = "Could not load recipes for '$ingredientName'.",
-                        isLoadingRecipes = false,
-                        recipes = emptyList()
-                    )
-                } else if (recipesList.isEmpty()) {
-                    _uiState.value = _uiState.value.copy(
-                        noRecipesMessage = "Sorry, no recipes for '$ingredientName' exist.",
-                        isLoadingRecipes = false,
-                        recipes = emptyList()
-                    )
-                } else {
+
+                if (recipesList != null) { // API call was successful in some form (might be empty list)
                     _uiState.value = _uiState.value.copy(
                         recipes = recipesList,
-                        isLoadingRecipes = false
+                        isLoadingRecipes = false,
+                        noRecipesMessage = if (recipesList.isEmpty()) "Sorry, no recipes for '$ingredientName' exist." else null,
+                        errorMessage = null // Clear error on successful fetch
+                    )
+                } else {
+                    // This case implies the repository returned null, which it does on an exception during fetch.
+                    // The catch block below should ideally handle this.
+                    // However, to be safe, if recipesList is null and not caught as specific exception:
+                    _uiState.value = _uiState.value.copy(
+                        isLoadingRecipes = false,
+                        errorMessage = "Could not load recipes for '$ingredientName'. Please check your connection.",
+                        recipes = emptyList()
                     )
                 }
-
                 lastFetchTimeMillis = SystemClock.elapsedRealtime()
             } catch (e: Exception) {
+                // This is where we explicitly check for network errors
+                val specificMessage = if (e is UnknownHostException || e is IOException) {
+                    "Connection lost. Please check your internet connection and try again."
+                } else {
+                    "An error occurred while fetching recipes for '$ingredientName'."
+                }
                 _uiState.value = _uiState.value.copy(
                     isLoadingRecipes = false,
-                    errorMessage = "Error fetching recipes: ${e.message}",
-                    recipes = emptyList()
+                    errorMessage = specificMessage,
+                    recipes = emptyList(),
+                    noRecipesMessage = null // Ensure noRecipesMessage is cleared if there's an error
                 )
             }
         }
     }
 
-    /**
-     * Called when an error message has been shown and should be cleared.
-     */
     fun errorMessageShown() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
-    /**
-     * Called from SplashScreen to perform pre-population tasks.
-     */
     fun prepopulateDatabase() {
         viewModelScope.launch {
             repository.prepopulateDatabaseWithRecipes()
